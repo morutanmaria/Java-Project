@@ -1,53 +1,34 @@
 package trainapp.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import trainapp.dto.AuthRequestDTO;
+import trainapp.dto.AuthResponseDTO;
 import trainapp.dto.UserRequestDTO;
-import trainapp.service.UserService;
+import trainapp.dto.UserResponseDTO;
+import trainapp.service.AuthService;
 
-@Controller
+@RestController
+@RequestMapping("/api/auth")
 public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
-    public AuthController(UserService userService) {
-        this.userService = userService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
-    // SHOW REGISTER PAGE
-    @GetMapping("/register")
-    public String showRegisterPage(Model model) {
-        model.addAttribute("user", new UserRequestDTO());
-        return "register";
-    }
-
-    // HANDLE REGISTER
     @PostMapping("/register")
-    public String register(@ModelAttribute UserRequestDTO dto) {
-        userService.register(dto);
-        return "redirect:/login";
+    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO dto) {
+        UserResponseDTO result = authService.register(dto);
+        return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
-    // SHOW LOGIN PAGE
-    @GetMapping("/login")
-    public String showLoginPage() {
-        return "login";
-    }
-
-    // HANDLE LOGIN (simple version)
     @PostMapping("/login")
-    public String login(@RequestParam String email,
-                        @RequestParam String password,
-                        Model model) {
-
-        boolean success = userService.login(email, password);
-
-        if (!success) {
-            model.addAttribute("error", "Invalid credentials");
-            return "login";
-        }
-
-        return "redirect:/users";
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO dto) {
+        AuthResponseDTO result = authService.login(dto);
+        return ResponseEntity.ok(result);
     }
 }

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Routes')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav('routes')}"></nav>
+<div class="page">
+    <div class="flex-between mb-2">
+        <div class="page-header">
+            <div class="page-title">Routes</div>
+            <div class="page-subtitle">Train routes and connections</div>
+        </div>
+        <button th:if="${isAdmin}" class="btn btn-primary" onclick="openModal('addModal')">+ Add Route</button>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th><th>From</th><th>To</th><th>Distance</th>
+                <th th:if="${isAdmin}">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="route : ${routes}">
+                <td th:text="${route.id}"></td>
+                <td><span class="badge badge-gold" th:text="${route.source}"></span></td>
+                <td><span class="badge badge-gold" th:text="${route.destination}"></span></td>
+                <td th:text="${route.distanceKm} + ' km'"></td>
+                <td th:if="${isAdmin}">
+                    <div class="flex flex-gap">
+                        <button class="btn btn-outline btn-sm edit-btn"
+                                th:data-id="${route.id}"
+                                th:data-source="${route.source}"
+                                th:data-destination="${route.destination}"
+                                th:data-distance="${route.distanceKm}">Edit</button>
+                        <form th:action="@{/routes/{id}/delete(id=${route.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('Delete this route?')">
+                            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(routes)}">
+                <td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">No routes found.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:if="${isAdmin}" class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-title">Add New Route</div>
+        <form th:action="@{/routes}" method="post">
+            <div class="form-grid form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">From (Source)</label>
+                    <input class="form-control" type="text" name="source" placeholder="e.g. Cluj-Napoca" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">To (Destination)</label>
+                    <input class="form-control" type="text" name="destination" placeholder="e.g. Bucharest" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Distance (km)</label>
+                    <input class="form-control" type="number" name="distanceKm" min="1" placeholder="450" required/>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Route</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:if="${isAdmin}" class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-title">Edit Route</div>
+        <form id="editForm" method="post">
+            <div class="form-grid form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">From (Source)</label>
+                    <input class="form-control" type="text" name="source" id="editSource" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">To (Destination)</label>
+                    <input class="form-control" type="text" name="destination" id="editDest" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Distance (km)</label>
+                    <input class="form-control" type="number" name="distanceKm" id="editDist" min="1" required/>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('editSource').value = this.dataset.source;
+            document.getElementById('editDest').value   = this.dataset.destination;
+            document.getElementById('editDist').value   = this.dataset.distance;
+            document.getElementById('editForm').action  = '/routes/' + this.dataset.id + '/edit';
+            openModal('editModal');
+        });
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach(m =>
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
+    );
+</script>
+</body>
+</html>

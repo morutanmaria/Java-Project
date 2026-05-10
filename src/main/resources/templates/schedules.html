@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Schedules')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav('schedules')}"></nav>
+<div class="page">
+    <div class="flex-between mb-2">
+        <div class="page-header">
+            <div class="page-title">Schedules</div>
+            <div class="page-subtitle">Train departure and arrival times</div>
+        </div>
+        <button th:if="${isAdmin}" class="btn btn-primary" onclick="openModal('addModal')">+ Add Schedule</button>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th><th>Train</th><th>Route</th><th>Departure</th><th>Arrival</th><th>Seats</th>
+                <th th:if="${isAdmin}">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${schedules}">
+                <td th:text="${s.id}"></td>
+                <td>
+                    <div th:text="${s.train.name}" style="font-weight:500"></div>
+                    <div th:text="${s.train.trainNumber}" style="color:var(--muted);font-size:0.8rem"></div>
+                </td>
+                <td>
+                    <span th:text="${s.route.source}"></span>
+                    <span style="color:var(--gold);margin:0 4px">→</span>
+                    <span th:text="${s.route.destination}"></span>
+                </td>
+                <td th:text="${#temporals.format(s.departureTime,'dd MMM yyyy HH:mm')}"></td>
+                <td th:text="${#temporals.format(s.arrivalTime,'dd MMM yyyy HH:mm')}"></td>
+                <td>
+                        <span th:classappend="${s.availableSeats == 0} ? 'badge-danger' : 'badge-success'"
+                              class="badge" th:text="${s.availableSeats}"></span>
+                </td>
+                <td th:if="${isAdmin}">
+                    <div class="flex flex-gap">
+                        <button class="btn btn-outline btn-sm edit-btn"
+                                th:data-id="${s.id}"
+                                th:data-train-id="${s.train.id}"
+                                th:data-route-id="${s.route.id}"
+                                th:data-dep="${#temporals.format(s.departureTime,'yyyy-MM-dd HH:mm')}"
+                                th:data-arr="${#temporals.format(s.arrivalTime,'yyyy-MM-dd HH:mm')}">Edit</button>
+                        <form th:action="@{/schedules/{id}/delete(id=${s.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('Delete this schedule?')">
+                            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(schedules)}">
+                <td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">No schedules found.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:if="${isAdmin}" class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-title">Add New Schedule</div>
+        <form th:action="@{/schedules}" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Train</label>
+                    <select class="form-control" name="trainId" required>
+                        <option value="">Select train…</option>
+                        <option th:each="t : ${trains}" th:value="${t.id}"
+                                th:text="${t.name + ' (' + t.trainNumber + ')'}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Route</label>
+                    <select class="form-control" name="routeId" required>
+                        <option value="">Select route…</option>
+                        <option th:each="r : ${routes}" th:value="${r.id}"
+                                th:text="${r.source + ' → ' + r.destination}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Departure Time</label>
+                    <input class="form-control" type="datetime-local" name="departureTime" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Arrival Time</label>
+                    <input class="form-control" type="datetime-local" name="arrivalTime" required/>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Schedule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:if="${isAdmin}" class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-title">Edit Schedule</div>
+        <form id="editForm" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Train</label>
+                    <select class="form-control" name="trainId" id="editTrain" required>
+                        <option th:each="t : ${trains}" th:value="${t.id}"
+                                th:text="${t.name + ' (' + t.trainNumber + ')'}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Route</label>
+                    <select class="form-control" name="routeId" id="editRoute" required>
+                        <option th:each="r : ${routes}" th:value="${r.id}"
+                                th:text="${r.source + ' → ' + r.destination}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Departure Time</label>
+                    <input class="form-control" type="datetime-local" name="departureTime" id="editDep" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Arrival Time</label>
+                    <input class="form-control" type="datetime-local" name="arrivalTime" id="editArr" required/>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('editTrain').value = this.dataset.trainId;
+            document.getElementById('editRoute').value = this.dataset.routeId;
+            document.getElementById('editDep').value   = this.dataset.dep.replace(' ', 'T');
+            document.getElementById('editArr').value   = this.dataset.arr.replace(' ', 'T');
+            document.getElementById('editForm').action = '/schedules/' + this.dataset.id + '/edit';
+            openModal('editModal');
+        });
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach(m =>
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
+    );
+</script>
+</body>
+</html>

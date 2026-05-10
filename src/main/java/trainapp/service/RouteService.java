@@ -1,10 +1,10 @@
 package trainapp.service;
 
 import org.springframework.stereotype.Service;
+import trainapp.dto.RouteDTO;
+import trainapp.exception.ResourceNotFoundException;
 import trainapp.model.Route;
-import trainapp.model.User;
 import trainapp.repository.RouteRepository;
-import trainapp.security.RoleChecker;
 
 import java.util.List;
 
@@ -17,17 +17,30 @@ public class RouteService {
         this.repo = repo;
     }
 
-    public Route addRoute(Route route) {
-        return repo.save(route);
+    public Route create(RouteDTO dto) {
+        Route r = new Route(dto.getSource(), dto.getDestination(), dto.getDistanceKm());
+        return repo.save(r);
     }
 
-    public List<Route> getAllRoutes() {
+    public List<Route> getAll() {
         return repo.findAll();
     }
-    public Route addRoute(Route route, User user) {
 
-        RoleChecker.requireAdmin(user);
+    public Route getById(Long id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Route not found: " + id));
+    }
 
-        return repo.save(route);
+    public Route update(Long id, RouteDTO dto) {
+        Route r = getById(id);
+        r.setSource(dto.getSource());
+        r.setDestination(dto.getDestination());
+        r.setDistanceKm(dto.getDistanceKm());
+        return repo.save(r);
+    }
+
+    public void delete(Long id) {
+        Route r = getById(id);
+        repo.delete(r);
     }
 }

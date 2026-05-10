@@ -1,26 +1,52 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Users</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Users')}"></head>
 <body>
+<nav th:replace="~{fragments :: nav('users')}"></nav>
+<div class="page">
+    <div class="page-header">
+        <div class="page-title">Users</div>
+        <div class="page-subtitle">Registered accounts</div>
+    </div>
 
-<h1>Users List</h1>
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value" th:text="${#lists.size(users)}"></div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" th:text="${adminCount}"></div>
+            <div class="stat-label">Admins</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" th:text="${userCount}"></div>
+            <div class="stat-label">Regular Users</div>
+        </div>
+    </div>
 
-<table border="1">
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Email</th>
-    </tr>
-
-    <tr th:each="user : ${users}">
-        <td th:text="${user.id}"></td>
-        <td th:text="${user.name}"></td>
-        <td th:text="${user.email}"></td>
-    </tr>
-
-</table>
-
+    <div class="card">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.name}" style="font-weight:500"></td>
+                    <td th:text="${user.email}" style="color:var(--muted)"></td>
+                    <td>
+                        <span th:if="${user.role == 'ADMIN'}"   class="badge badge-gold">Admin</span>
+                        <span th:unless="${user.role == 'ADMIN'}" class="badge badge-muted">User</span>
+                    </td>
+                    <td th:text="${user.createdAt != null} ? ${#temporals.format(user.createdAt,'dd MMM yyyy')} : '—'"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(users)}">
+                    <td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">No users found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 </body>
 </html>

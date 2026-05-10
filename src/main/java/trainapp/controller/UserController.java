@@ -1,16 +1,14 @@
 package trainapp.controller;
 
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import trainapp.dto.UserRequestDTO;
 import trainapp.dto.UserResponseDTO;
 import trainapp.service.UserService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Controller
-@RequestMapping("/users")
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService service;
@@ -19,20 +17,13 @@ public class UserController {
         this.service = service;
     }
 
-    @PostMapping("/register")
-    public UserResponseDTO register(@RequestBody UserRequestDTO dto) {
-        return service.register(dto);
+    @GetMapping
+    public ResponseEntity<List<UserResponseDTO>> getAll() {
+        return ResponseEntity.ok(service.getAll());
     }
 
-    @GetMapping
-    public List<UserResponseDTO> getAll() {
-        return service.getAll().stream()
-                .map(u -> new UserResponseDTO(
-                        u.getId(),
-                        u.getName(),
-                        u.getEmail(),
-                        u.getRole()
-                ))
-                .collect(Collectors.toList());
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getById(id));
     }
 }

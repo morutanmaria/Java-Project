@@ -1,28 +1,161 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Trains</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Trains')}"></head>
 <body>
+<nav th:replace="~{fragments :: nav('trains')}"></nav>
+<div class="page">
+    <div class="flex-between mb-2">
+        <div class="page-header">
+            <div class="page-title">Trains</div>
+            <div class="page-subtitle">Browse the train fleet</div>
+        </div>
+        <button th:if="${isAdmin}" class="btn btn-primary" onclick="openModal('addModal')">+ Add Train</button>
+    </div>
 
-<h1>Trains</h1>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
 
-<table border="1">
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Train Number</th>
-        <th>Seats</th>
-    </tr>
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th><th>Name</th><th>Number</th><th>Seats</th><th>Status</th><th>Delay</th>
+                <th th:if="${isAdmin}">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="train : ${trains}">
+                <td th:text="${train.id}"></td>
+                <td th:text="${train.name}"></td>
+                <td><span class="badge badge-muted" th:text="${train.trainNumber}"></span></td>
+                <td th:text="${train.totalSeats}"></td>
+                <td>
+                    <span th:if="${train.delayed}"    class="badge badge-danger">Delayed</span>
+                    <span th:unless="${train.delayed}" class="badge badge-success">On Time</span>
+                </td>
+                <td th:text="${train.delayed} ? ${train.delayMinutes} + ' min' : '—'"></td>
+                <td th:if="${isAdmin}">
+                    <div class="flex flex-gap">
+                        <button class="btn btn-outline btn-sm edit-btn"
+                                th:data-id="${train.id}"
+                                th:data-name="${train.name}"
+                                th:data-number="${train.trainNumber}"
+                                th:data-seats="${train.totalSeats}">Edit</button>
+                        <button class="btn btn-outline btn-sm delay-btn"
+                                th:data-id="${train.id}"
+                                th:data-name="${train.name}">Report Delay</button>
+                        <form th:action="@{/trains/{id}/delete(id=${train.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('Delete this train?')">
+                            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(trains)}">
+                <td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">No trains found.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-    <tr th:each="train : ${trains}">
-        <td th:text="${train.id}"></td>
-        <td th:text="${train.name}"></td>
-        <td th:text="${train.trainNumber}"></td>
-        <td th:text="${train.totalSeats}"></td>
-    </tr>
+<div th:if="${isAdmin}" class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-title">Add New Train</div>
+        <form th:action="@{/trains}" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Train Name</label>
+                    <input class="form-control" type="text" name="name" placeholder="e.g. InterCity 100" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Train Number</label>
+                    <input class="form-control" type="text" name="trainNumber" placeholder="e.g. IC100" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Total Seats</label>
+                    <input class="form-control" type="number" name="totalSeats" min="1" placeholder="200" required/>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Train</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-</table>
+<div th:if="${isAdmin}" class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-title">Edit Train</div>
+        <form id="editForm" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Train Name</label>
+                    <input class="form-control" type="text" name="name" id="editName" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Train Number</label>
+                    <input class="form-control" type="text" name="trainNumber" id="editNumber" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Total Seats</label>
+                    <input class="form-control" type="number" name="totalSeats" id="editSeats" min="1" required/>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 
+<div th:if="${isAdmin}" class="modal-overlay" id="delayModal">
+    <div class="modal">
+        <div class="modal-title">Report Delay</div>
+        <p style="color:var(--muted);font-size:0.88rem;margin-bottom:1rem">
+            All passengers booked on <strong id="delayTrainName" style="color:var(--cream)"></strong> will be notified by email.
+        </p>
+        <form id="delayForm" method="post">
+            <div class="form-group">
+                <label class="form-label">Delay in Minutes</label>
+                <input class="form-control" type="number" name="delayMinutes" min="1" placeholder="e.g. 30" required/>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('delayModal')">Cancel</button>
+                <button type="submit" class="btn btn-danger">Report Delay</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('editName').value   = this.dataset.name;
+            document.getElementById('editNumber').value = this.dataset.number;
+            document.getElementById('editSeats').value  = this.dataset.seats;
+            document.getElementById('editForm').action  = '/trains/' + this.dataset.id + '/edit';
+            openModal('editModal');
+        });
+    });
+
+    document.querySelectorAll('.delay-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('delayTrainName').textContent = this.dataset.name;
+            document.getElementById('delayForm').action = '/trains/' + this.dataset.id + '/delay';
+            openModal('delayModal');
+        });
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach(m =>
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
+    );
+</script>
 </body>
 </html>

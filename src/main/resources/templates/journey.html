@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Journey Search')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav('journey')}"></nav>
+<div class="page">
+    <div class="page-header">
+        <div class="page-title">Journey Search</div>
+        <div class="page-subtitle">Find direct routes or connections between stations</div>
+    </div>
+
+    <div class="card mb-2">
+        <form th:action="@{/journey}" method="get">
+            <div class="form-grid form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">From Station</label>
+                    <input class="form-control" type="text" name="from" th:value="${from}" placeholder="e.g. Cluj-Napoca" required autofocus/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">To Station</label>
+                    <input class="form-control" type="text" name="to" th:value="${to}" placeholder="e.g. Bucharest" required/>
+                </div>
+            </div>
+            <div class="mt-2">
+                <button type="submit" class="btn btn-primary">🔍 Search Journeys</button>
+            </div>
+        </form>
+    </div>
+
+    <div th:if="${noResults}" class="alert alert-error">
+        No routes found between <strong th:text="${from}"></strong> and <strong th:text="${to}"></strong>.
+        No direct or changeover connections are available.
+    </div>
+
+    <div th:if="${results != null and not #lists.isEmpty(results)}">
+        <div class="page-subtitle mt-2 mb-2" style="color:var(--gold2)">
+            Found <span th:text="${#lists.size(results)}"></span> possible journey(s):
+        </div>
+
+        <div th:each="result, iter : ${results}">
+            <div class="journey-card">
+                <div class="journey-type">
+                    <span th:if="${result.type == 'DIRECT'}">✦ Direct Route</span>
+                    <span th:if="${result.type == 'CHANGEOVER'}">⇄ Changeover Route</span>
+                </div>
+
+                <div th:each="leg, legIter : ${result.legs}">
+                    <div th:if="${legIter.index > 0}" class="leg-divider">
+                        <small>🔄 Change trains at <strong th:text="${result.legs[legIter.index - 1].route.destination}"></strong></small>
+                    </div>
+                    <div class="journey-leg">
+                        <div>
+                            <div class="journey-station" th:text="${leg.route.source}"></div>
+                            <div class="journey-time" th:text="'Dep: ' + ${#temporals.format(leg.departureTime,'dd MMM HH:mm')}"></div>
+                        </div>
+                        <div class="journey-arrow">→</div>
+                        <div>
+                            <div class="journey-station" th:text="${leg.route.destination}"></div>
+                            <div class="journey-time" th:text="'Arr: ' + ${#temporals.format(leg.arrivalTime,'dd MMM HH:mm')}"></div>
+                        </div>
+                        <div style="margin-left:auto;text-align:right">
+                            <div class="journey-train" th:text="${leg.train.name}"></div>
+                            <div class="journey-train" th:text="${leg.train.trainNumber}"></div>
+                            <div class="mt-1">
+                                <span class="badge badge-muted" th:text="${leg.availableSeats} + ' seats'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    <a th:href="@{/bookings/new(scheduleId=${result.legs[0].id})}" class="btn btn-primary btn-sm">Book This Journey</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

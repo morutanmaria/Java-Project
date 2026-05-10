@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Bookings')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav('bookings')}"></nav>
+<div class="page">
+    <div class="flex-between mb-2">
+        <div class="page-header">
+            <div class="page-title">Bookings</div>
+            <div class="page-subtitle" th:text="${isAdmin} ? 'All bookings across all trains' : 'Your personal bookings'"></div>
+        </div>
+        <a href="/bookings/new" class="btn btn-primary">+ Book Tickets</a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}"   class="alert alert-error"   th:text="${error}"></div>
+
+    <div th:if="${isAdmin}" class="card mb-2">
+        <form th:action="@{/bookings}" method="get" style="display:flex;gap:1rem;align-items:flex-end">
+            <div class="form-group" style="flex:1">
+                <label class="form-label">Filter by Train</label>
+                <select class="form-control" name="trainId">
+                    <option value="">All Trains</option>
+                    <option th:each="t : ${trains}" th:value="${t.id}" th:text="${t.name + ' (' + t.trainNumber + ')'}"
+                            th:selected="${selectedTrainId != null and selectedTrainId == t.id}"></option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-outline" style="margin-bottom:0">Filter</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th th:if="${isAdmin}">Passenger</th>
+                    <th>Train</th><th>Route</th><th>Departure</th><th>Seats</th><th>Status</th><th>Booked At</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="b : ${bookings}">
+                    <td th:text="${b.id}"></td>
+                    <td th:if="${isAdmin}">
+                        <div th:text="${b.user.name}" style="font-weight:500"></div>
+                        <div th:text="${b.user.email}" style="color:var(--muted);font-size:0.8rem"></div>
+                    </td>
+                    <td>
+                        <div th:text="${b.schedule.train.name}" style="font-weight:500"></div>
+                        <span class="badge badge-muted" th:text="${b.schedule.train.trainNumber}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${b.schedule.route.source}"></span>
+                        <span style="color:var(--gold)"> → </span>
+                        <span th:text="${b.schedule.route.destination}"></span>
+                    </td>
+                    <td th:text="${#temporals.format(b.schedule.departureTime,'dd MMM yyyy HH:mm')}"></td>
+                    <td th:text="${b.seatsBooked}"></td>
+                    <td><span class="badge badge-success" th:text="${b.bookingStatus}"></span></td>
+                    <td th:text="${#temporals.format(b.bookingTime,'dd MMM yyyy HH:mm')}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(bookings)}">
+                    <td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">No bookings found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

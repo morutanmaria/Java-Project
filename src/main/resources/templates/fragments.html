@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${title} + ' — RailApp'">RailApp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:    #0d1b2a;
+            --navy2:   #132238;
+            --navy3:   #1c3051;
+            --gold:    #c9a84c;
+            --gold2:   #e8c76a;
+            --cream:   #f5f0e8;
+            --muted:   #8a9bb5;
+            --danger:  #e05252;
+            --success: #4caf82;
+            --white:   #ffffff;
+            --card-bg: #162036;
+            --border:  rgba(201,168,76,0.18);
+            --radius:  10px;
+            --shadow:  0 4px 24px rgba(0,0,0,0.35);
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background: var(--navy); color: var(--cream); min-height: 100vh; }
+
+        nav {
+            background: var(--navy2);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-brand { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); text-decoration: none; letter-spacing: 0.04em; }
+        .nav-brand span { color: var(--cream); font-size: 0.8rem; font-family: 'DM Sans', sans-serif; font-weight: 300; margin-left: 8px; opacity: 0.6; }
+        .nav-links { display: flex; gap: 0.25rem; align-items: center; }
+        .nav-links a { color: var(--muted); text-decoration: none; padding: 0.4rem 0.9rem; border-radius: 6px; font-size: 0.88rem; font-weight: 500; transition: all 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--gold); background: rgba(201,168,76,0.1); }
+        .nav-links a.logout:hover { color: var(--danger); background: rgba(224,82,82,0.1); }
+        .nav-badge { background: var(--gold); color: var(--navy); font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 20px; margin-left: 4px; vertical-align: middle; }
+
+        .page { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+        .page-header { margin-bottom: 2rem; }
+        .page-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gold); }
+        .page-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 0.3rem; }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
+        .card-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold2); margin-bottom: 1rem; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        thead tr { border-bottom: 1px solid var(--border); }
+        thead th { color: var(--gold); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.76rem; padding: 0.75rem 1rem; text-align: left; }
+        tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
+        tbody td { padding: 0.75rem 1rem; color: var(--cream); vertical-align: middle; }
+
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+        .badge-success { background: rgba(76,175,130,0.15); color: var(--success); border: 1px solid rgba(76,175,130,0.3); }
+        .badge-danger  { background: rgba(224,82,82,0.15);  color: var(--danger);  border: 1px solid rgba(224,82,82,0.3); }
+        .badge-gold    { background: rgba(201,168,76,0.15); color: var(--gold2);   border: 1px solid rgba(201,168,76,0.3); }
+        .badge-muted   { background: rgba(138,155,181,0.1); color: var(--muted);   border: 1px solid rgba(138,155,181,0.2); }
+
+        .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.1rem; border-radius: 7px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; text-decoration: none; transition: all 0.2s; }
+        .btn-primary { background: var(--gold); color: var(--navy); }
+        .btn-primary:hover { background: var(--gold2); }
+        .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--border); }
+        .btn-outline:hover { background: rgba(201,168,76,0.1); }
+        .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(224,82,82,0.3); }
+        .btn-danger:hover { background: rgba(224,82,82,0.1); }
+        .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+
+        .form-grid { display: grid; gap: 1rem; }
+        .form-grid-2 { grid-template-columns: 1fr 1fr; }
+        .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-label { color: var(--muted); font-size: 0.82rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-control { background: var(--navy3); border: 1px solid var(--border); border-radius: 7px; color: var(--cream); padding: 0.6rem 0.9rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; transition: border-color 0.2s; width: 100%; }
+        .form-control:focus { outline: none; border-color: var(--gold); }
+        select.form-control option { background: var(--navy2); }
+
+        .alert { padding: 0.8rem 1.1rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1rem; }
+        .alert-error   { background: rgba(224,82,82,0.12);  color: #f08080; border: 1px solid rgba(224,82,82,0.3); }
+        .alert-success { background: rgba(76,175,130,0.12); color: #7dd4b0; border: 1px solid rgba(76,175,130,0.3); }
+        .alert-info    { background: rgba(201,168,76,0.10); color: var(--gold2); border: 1px solid var(--border); }
+
+        .flex { display: flex; }
+        .flex-between { display: flex; align-items: center; justify-content: space-between; }
+        .flex-gap { gap: 0.75rem; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; width: 100%; max-width: 480px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+        .modal-title { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.2rem; margin-bottom: 1.2rem; }
+        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+        .journey-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+        .journey-type { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gold); margin-bottom: 0.75rem; font-weight: 600; }
+        .journey-leg { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0; }
+        .journey-station { font-weight: 500; }
+        .journey-time { color: var(--muted); font-size: 0.85rem; }
+        .journey-arrow { color: var(--gold); font-size: 1.2rem; }
+        .journey-train { color: var(--muted); font-size: 0.8rem; }
+        .leg-divider { border-top: 1px dashed var(--border); margin: 0.5rem 0; padding-top: 0.5rem; }
+        .leg-divider small { color: var(--muted); font-size: 0.78rem; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+        .stat-value { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gold); }
+        .stat-label { color: var(--muted); font-size: 0.8rem; margin-top: 0.2rem; }
+
+        @media (max-width: 700px) {
+            .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+            nav { padding: 0 1rem; }
+            .page { padding: 1.5rem 1rem; }
+        }
+    </style>
+</head>
+
+<nav th:fragment="nav(active)">
+    <a class="nav-brand" href="/trains">🚂 RailApp <span>Ticketing System</span></a>
+    <div class="nav-links">
+        <a th:href="@{/trains}"    th:classappend="${active == 'trains'}    ? 'active' : ''">Trains</a>
+        <a th:href="@{/routes}"    th:classappend="${active == 'routes'}    ? 'active' : ''">Routes</a>
+        <a th:href="@{/schedules}" th:classappend="${active == 'schedules'} ? 'active' : ''">Schedules</a>
+        <a th:href="@{/journey}"   th:classappend="${active == 'journey'}   ? 'active' : ''">Journey Search</a>
+        <a th:href="@{/bookings}"  th:classappend="${active == 'bookings'}  ? 'active' : ''">Bookings</a>
+        <a th:href="@{/users}"     th:classappend="${active == 'users'}     ? 'active' : ''"
+           th:if="${isAdmin}">Users <span class="nav-badge">Admin</span></a>
+        <a th:href="@{/logout}" class="logout">Logout</a>
+    </div>
+</nav>
+</html>

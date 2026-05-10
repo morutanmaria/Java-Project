@@ -4,7 +4,7 @@ public class AuthResponseDTO {
     private Long userId;
     private String email;
     private String role;
-    private String token; // placeholder for future JWT
+    private String token;
 
     public AuthResponseDTO(Long userId, String email, String role, String token) {
         this.userId = userId;
@@ -13,29 +13,8 @@ public class AuthResponseDTO {
         this.token = token;
     }
 
-    public Long getUserId() {
-        return userId;
-    }
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-    public String getEmail() {
-        return email;
-    }
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public String getRole() {
-        return role;
-    }
-    public void setRole(String role) {
-        this.role = role;
-    }
-    public String getToken() {
-        return token;
-    }
-    public void setToken(String token) {
-        this.token = token;
-    }
-
+    public Long getUserId() { return userId; }
+    public String getEmail() { return email; }
+    public String getRole() { return role; }
+    public String getToken() { return token; }
 }

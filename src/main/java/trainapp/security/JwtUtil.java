@@ -2,31 +2,56 @@ package trainapp.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 
+@Component
 public class JwtUtil {
 
-    private static final String SECRET = "my_secret_key_my_secret_key_my_secret_key";
+    private final Key key;
+    private final long expirationMs;
 
-    private static final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    public JwtUtil(@Value("${jwt.secret}") String secret,
+                   @Value("${jwt.expiration-ms}") long expirationMs) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.expirationMs = expirationMs;
+    }
 
-    public static String generateToken(String email) {
+    public String generateToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
+                .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public static String extractEmail(String token) {
+    public String extractEmail(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        return (String) getClaims(token).get("role");
+    }
+
+    public boolean isValid(String token) {
+        try {
+            getClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
     }
 }

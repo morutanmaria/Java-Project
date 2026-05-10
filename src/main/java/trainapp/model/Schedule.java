@@ -1,5 +1,6 @@
 package trainapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,10 +12,12 @@ public class Schedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Train train;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Route route;
 
     private LocalDateTime departureTime;
@@ -29,41 +32,17 @@ public class Schedule {
         this.arrivalTime = arrivalTime;
         this.availableSeats = availableSeats;
     }
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public Train getTrain() {
-        return train;
-    }
-    public void setTrain(Train train) {
-        this.train = train;
-    }
-    public Route getRoute() {
-        return route;
-    }
-    public void setRoute(Route route) {
-        this.route = route;
-    }
-    public LocalDateTime getDepartureTime() {
-        return departureTime;
-    }
-    public void setDepartureTime(LocalDateTime departureTime) {
-        this.departureTime = departureTime;
-    }
-    public LocalDateTime getArrivalTime() {
-        return arrivalTime;
-    }
-    public void setArrivalTime(LocalDateTime arrivalTime) {
-        this.arrivalTime = arrivalTime;
-    }
-    public int getAvailableSeats() {
-        return availableSeats;
-    }
-    public void setAvailableSeats(int availableSeats) {
-        this.availableSeats = availableSeats;
-    }
 
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Train getTrain() { return train; }
+    public void setTrain(Train train) { this.train = train; }
+    public Route getRoute() { return route; }
+    public void setRoute(Route route) { this.route = route; }
+    public LocalDateTime getDepartureTime() { return departureTime; }
+    public void setDepartureTime(LocalDateTime departureTime) { this.departureTime = departureTime; }
+    public LocalDateTime getArrivalTime() { return arrivalTime; }
+    public void setArrivalTime(LocalDateTime arrivalTime) { this.arrivalTime = arrivalTime; }
+    public int getAvailableSeats() { return availableSeats; }
+    public void setAvailableSeats(int availableSeats) { this.availableSeats = availableSeats; }
 }
